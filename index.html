@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bluebird Skies">
 <title>Bluebird Skies</title>
 <style>
   *{box-sizing:border-box}
@@ -108,6 +110,17 @@
     body.touch #panel{transform:scale(.66)}
     #menu h1{font-size:28px}#menu .top p,.card p{display:none}#menu .top{padding-top:10px}
   }
+  /* iPhone Safari: let the page scroll a little so a swipe up can hide Safari's bar */
+  #iosSpacer{display:none}
+  html.ios,html.ios body{position:static;overflow:visible;height:auto;min-height:100%}
+  html.ios #iosSpacer{display:block;height:calc(100vh + 420px)}
+  html.ios canvas#gl{position:fixed;left:0;top:0}
+  html.ios.swipe,html.ios.swipe body{touch-action:pan-y}
+  #iosfs{position:fixed;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;background:rgba(5,25,55,.6);backdrop-filter:blur(3px);touch-action:pan-y;font-weight:700}
+  #iosfs .arrow{font-size:54px;animation:swipeUp 1.3s ease-in-out infinite}
+  #iosfs .t1{font-size:20px}#iosfs .t2{font-size:13px;opacity:.8;font-weight:500;max-width:420px}
+  #iosfs .tb{pointer-events:auto;margin-top:6px}
+  @keyframes swipeUp{0%{transform:translateY(25px);opacity:0}30%{opacity:1}100%{transform:translateY(-30px);opacity:0}}
   #rotate{display:none;position:fixed;inset:0;z-index:20;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px;background:linear-gradient(#3f86d0,#9ccbf2);font-size:18px;font-weight:700}
   #rotate .big{font-size:64px}
   #rotate .tb{pointer-events:auto;font-size:15px}
@@ -117,6 +130,8 @@
 </head>
 <body>
 <div id="loading">Building the world…</div>
+<div id="iosfs" class="hidden"><div class="arrow">⬆</div><div class="t1">Swipe up to hide Safari's bar and play full screen</div><div class="t2">Tip: tap Share → “Add to Home Screen” to always launch the game full screen.</div><div class="tb" id="iosno">Not now</div></div>
+<div id="iosSpacer"></div>
 <div id="rotate"><div class="big">📱↻</div><div>Turn your device sideways for the best view</div><div class="tb" id="rotok">Play anyway</div></div>
 <div id="cloudFx"></div>
 <div id="flash"></div>
@@ -981,6 +996,23 @@ if(matchMedia('(pointer:coarse)').matches)enableTouch();
 addEventListener('touchstart',enableTouch,{passive:true,once:true});
 addEventListener('contextmenu',e=>e.preventDefault());
 $('rotok').onclick=()=>document.body.classList.add('rotok');
+// iPhone Safari can't go full screen from script; in landscape a swipe up collapses its bar
+const IS_IPHONE=/iPhone|iPod/.test(navigator.userAgent);
+let fsDismissed=false;
+if(IS_IPHONE&&!navigator.standalone)document.documentElement.classList.add('ios');
+function checkIOSBars(){
+  const de=document.documentElement;if(!de.classList.contains('ios'))return;
+  const land=innerWidth>innerHeight,full=Math.min(screen.width,screen.height);
+  const barsUp=land&&innerHeight<full-30;
+  de.classList.toggle('swipe',barsUp);               // page may scroll only while the bar is showing
+  $('iosfs').classList.toggle('hidden',!(barsUp&&!fsDismissed));
+  if(!land)fsDismissed=false;
+}
+$('iosno').onclick=()=>{fsDismissed=true;checkIOSBars();};
+addEventListener('resize',checkIOSBars);
+addEventListener('orientationchange',()=>{fsDismissed=false;setTimeout(checkIOSBars,350);});
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>{dispatchEvent(new Event('resize'));});
+setInterval(checkIOSBars,800);checkIOSBars();
 { // stick
   const pad=$('pad'),knob=$('knob'),ars=[...pad.querySelectorAll('.ar')];let id=null;
   const f=v=>{const a=Math.abs(v);return a<0.12?0:Math.sign(v)*Math.min(1,Math.pow((a-0.12)/0.72,1.2));};
@@ -1024,7 +1056,7 @@ function startFlight(){
   const s=P.spec;
   $('thrLbl').textContent=s.heli?'COL':'THR';$('tlbl').textContent=s.heli?'COLLECTIVE':'THROTTLE';
   $('touch').classList.toggle('osprey',!!s.tilt);
-  if(touchMode){try{const de=document.documentElement;if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})).catch(()=>{});}catch(e){}}
+  if(touchMode){try{const de=document.documentElement;if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})).catch(()=>{});else if(de.webkitRequestFullscreen&&!document.webkitFullscreenElement)de.webkitRequestFullscreen();}catch(e){}}
   $('nacRow').classList.toggle('hidden',!s.tilt);$('wpnRow').classList.toggle('hidden',!s.weapons);
   $('help').innerHTML=s.heli?
     `<b>W</b><b>S</b> collective (up/down) &nbsp; <b>↑</b><b>↓</b> tilt fwd/back<br><b>←</b><b>→</b> tilt sideways &nbsp; <b>A</b><b>D</b> turn (yaw)<br>${s.tilt?'<b>Q</b><b>E</b> tilt rotors plane/hover &nbsp; <b>G</b> gear<br>':''}${s.weapons?'<b>Space</b> / <b>F</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br>':''}<b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`:
