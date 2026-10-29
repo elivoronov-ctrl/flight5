@@ -51,6 +51,9 @@
   .card{cursor:pointer;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.18);backdrop-filter:blur(8px);transition:transform .15s,background .15s,border-color .15s}
   .card:hover{transform:translateY(-3px);background:rgba(255,255,255,.2)}
   .card.sel{border-color:#ffd34d;background:rgba(255,211,77,.18)}
+  .card.secret{background:linear-gradient(135deg,rgba(20,20,30,.55),rgba(80,60,10,.35));border-color:rgba(255,211,77,.45)}
+  .card.secret.sel{border-color:#ffd34d;box-shadow:0 0 18px rgba(255,211,77,.45)}
+  .sect.secret{color:#ffd34d}
   .card h3{margin:0;font-size:18px}
   .card .real{font-size:12px;opacity:.75;margin-top:2px}
   .card p{font-size:12px;margin:5px 0;opacity:.92}
@@ -181,11 +184,12 @@
   <div class="bottom">
     <div class="sect">✈ Airplanes</div><div id="cards" class="cards"></div>
     <div class="sect">🚁 Helicopters</div><div id="hcards" class="cards"></div>
+    <div class="sect secret">🔒 Secret hangar · nuke‑proof</div><div id="scards" class="cards"></div>
     <div class="controls">
       <label><input type="checkbox" id="inv"> Arrow ↑ = nose up (instead of flight‑stick style)</label>
       <button id="go">Take off ▶</button>
     </div>
-    <div class="keys">W/S throttle · ↑↓ pitch · ←→ roll · A/D rudder · G gear · B brakes · C camera · Esc menu · M mute · Space missiles · N nuke · L laser · 1–7 pick aircraft · Enter to start</div>
+    <div class="keys">W/S throttle · ↑↓ pitch · ←→ roll · A/D rudder · G gear · B brakes · C camera · Esc menu · M mute · Space missiles · N nuke · L laser · 1–9 pick aircraft · Enter to start</div>
   </div>
 </div>
 
@@ -232,6 +236,10 @@ const PLANES=[
   lift:19.6,max:82,att:2.6,maxTilt:0.5,yaw:1.4,gearH:1.9,belly:1.9,span:14.6,len:17,rotorY:2.4,camDist:22,camH:6,cock:[1.5,-2.6],landVs:5,landHs:15,stall:0,color:0x3f4a35,ratings:[2,4,3]},
  {id:'osprey',heli:true,tilt:true,retract:true,name:'V‑22 Osprey',real:'Tiltrotor',desc:'Hovers like a helicopter, then tilt the rotors forward (Q) to fly like a plane.',
   lift:18.5,fwdThrust:9,max:140,hoverMax:70,stall:45,att:1.5,maxTilt:0.35,pitch:1.2,roll:1.6,yaw:0.6,turn:0.75,gearH:2.65,belly:1.65,span:25,len:18,rotorY:4.5,camDist:32,camH:9,cock:[1.3,-7],landVs:6,landHs:25,color:0x6f7780,ratings:[3,3,2]},
+ {id:'f35',heli:true,tilt:true,stovl:true,jet:true,retract:true,secret:true,nukeProof:true,name:'F‑35B Lightning II',real:'Secret · STOVL stealth jet',desc:'Takes off and lands straight up and down, then swivels its nozzle (Q) to become a fast jet.',
+  lift:18.5,fwdThrust:24,max:250,hoverMax:55,stall:38,att:1.9,maxTilt:0.3,pitch:1.8,roll:3.6,yaw:0.7,turn:1.05,convRate:0.2,rollF:0.04,gearH:1.85,belly:0.7,span:10.7,len:15.6,rotorY:0,camDist:27,camH:6.5,cock:[0.95,-3.2],landVs:6,landHs:130,color:0x5f666e,ratings:[5,5,3]},
+ {id:'stormhawk',heli:true,jetThrust:13,wingLift:true,retract:true,secret:true,nukeProof:true,name:'XH‑9 Stormhawk',real:'Secret · winged jet helicopter',desc:'Two sets of wings and twin jets. Push the nose forward and the jets kick in for crazy speed.',
+  lift:19.5,max:125,att:2.4,maxTilt:0.45,yaw:1.3,gearH:1.9,belly:1.0,span:12.4,len:14,rotorY:1.9,camDist:24,camH:6.5,cock:[1.4,-2.4],landVs:5,landHs:15,stall:0,color:0x22252b,ratings:[4,4,3]},
 ];
 
 for(const p of PLANES)p.weapons=true;
@@ -934,7 +942,53 @@ function buildOsprey(){
   wheel(gear,0,-2.25,-6,0.4,-1.5);wheel(gear,1.9,-2.2,0.6,0.45,-1.6);wheel(gear,-1.9,-2.2,0.6,0.45,-1.6);
   g.add(gear);return {g,gear,prop:null,burners:[],rotors,discs,nacelles};
 }
-const BUILDERS={cub:buildCub,spitfire:buildSpitfire,f16:buildF16,sr71:buildSR71,chinook:buildChinook,apache:buildApache,osprey:buildOsprey};
+function coldJet(r,len){const m=new THREE.Mesh(coneBack(r,len,12),new THREE.MeshBasicMaterial({color:0xd8ecff,transparent:true,opacity:0.35,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.z=len/2;return m;}
+function buildF35(){
+  const g=new THREE.Group(),gear=new THREE.Group();
+  const gr=M(0x5f666e,{roughness:0.55,metalness:0.3}),dk=M(0x41474d,{roughness:0.5,metalness:0.4}),glass=M(0xc9a74a,{metalness:0.85,roughness:0.08,transparent:true,opacity:0.85});
+  add(g,BOX(2.4,1.25,9.2),gr,0,0,0.6);
+  add(g,coneFwd(1.0,4.4,6),gr,0,-0.05,-6.1);
+  for(const sx of[1,-1])add(g,BOX(0.75,1.05,3.2),dk,sx*1.45,-0.05,-2.4);
+  const can=new THREE.SphereGeometry(1,16,12);can.scale(0.55,0.45,1.8);add(g,can,glass,0,0.68,-3.9);
+  add(g,flatShape([[1.1,-1.6],[5.35,2.3],[5.35,3.3],[1.1,3.7],[-1.1,3.7],[-5.35,3.3],[-5.35,2.3],[-1.1,-1.6]],0.16),gr,0,-0.05,0);
+  add(g,flatShape([[1,4.5],[3.4,6.0],[3.4,6.7],[-3.4,6.7],[-3.4,6.0],[-1,4.5]],0.12),dk,0,0,0);
+  for(const sx of[1,-1])add(g,finShape([[3.7,0.4],[5.5,2.8],[6.3,2.8],[6.4,0.4]],0.12),dk,sx*1.0,0.45,0,0,0,-sx*0.45);
+  add(g,BOX(1.5,0.07,1.9),dk,0,0.64,-1.7); // lift fan doors
+  const nz=new THREE.Group();nz.position.set(0,0,5.2);g.add(nz); // swivelling rear nozzle
+  add(nz,cylZ(0.52,0.62,1.5,14),M(0x3a3a3a,{metalness:0.7}),0,0,0.75);
+  const b=burner(0.45,4);b.position.z=3.5;nz.add(b);
+  const lf=new THREE.Group();lf.position.set(0,-0.6,-1.7);lf.rotation.x=Math.PI/2;g.add(lf); // lift fan blast (points down)
+  const lb=coldJet(0.75,4);lf.add(lb);
+  for(const sx of[1,-1]){const rp=new THREE.Group();rp.position.set(sx*3.6,-0.2,1.6);rp.rotation.x=Math.PI/2;g.add(rp);const r=coldJet(0.18,1.6);rp.add(r);lb.userData.extra=(lb.userData.extra||[]).concat(r);}
+  wheel(gear,0,-1.5,-4.6,0.3,-0.5);wheel(gear,1.3,-1.45,1.3,0.38,-0.5);wheel(gear,-1.3,-1.45,1.3,0.38,-0.5);
+  g.add(gear);return {g,gear,prop:null,burners:[b],nacelles:[nz],hoverFx:[lb,...lb.userData.extra]};
+}
+function buildStormhawk(){
+  const g=new THREE.Group(),gear=new THREE.Group();
+  const blk=M(0x22252b,{roughness:0.6,metalness:0.3}),dk=M(0x111317,{roughness:0.5,metalness:0.5}),gold=M(0xd4a73a,{metalness:0.75,roughness:0.3}),glass=M(0x4a5a66,{metalness:0.6,roughness:0.1}),bl=M(0x1a1a1a);
+  add(g,BOX(1.8,1.8,6),blk,0,0.2,-0.4);
+  add(g,coneFwd(0.95,2.4,10),blk,0,0.05,-4.6);
+  const can=new THREE.SphereGeometry(1,16,12);can.scale(0.85,0.7,1.6);add(g,can,glass,0,0.75,-2.6);
+  add(g,BOX(1.84,0.22,6.02),gold,0,-0.35,-0.4);
+  add(g,cylZ(0.35,0.8,6.5,10),blk,0,0.45,5.4);
+  add(g,BOX(9.0,0.2,1.7),blk,0,-0.35,0.3);          // main wing
+  add(g,BOX(3.6,0.14,0.8),blk,0,-0.05,-3.3);        // canards
+  add(g,BOX(5.6,0.14,1.0),blk,0,1.15,0.9);          // upper wing
+  for(const sx of[1,-1])add(g,BOX(0.14,1.5,0.9),blk,sx*2.7,0.4,0.9);
+  const burners=[];
+  for(const sx of[1,-1]){
+    add(g,cylZ(0.45,0.55,2.8,12),dk,sx*4.4,-0.35,0.5);
+    add(g,new THREE.TorusGeometry(0.55,0.08,6,16),gold,sx*4.4,-0.35,-0.9);
+    const b=burner(0.4,3);b.position.set(sx*4.4,-0.35,3.4);g.add(b);burners.push(b);
+  }
+  add(g,BOX(3.4,0.12,0.9),blk,0,0.6,8.3);
+  for(const sx of[1,-1])add(g,BOX(0.12,1.9,1.1),gold,sx*1.7,1.2,8.3);
+  add(g,BOX(0.5,0.7,0.6),blk,0,1.45,-0.6);
+  const mr=rotor(5,6.2,0.5,bl);mr.grp.position.set(0,1.95,-0.6);g.add(mr.grp);
+  wheel(gear,1.0,-1.55,-2.2,0.32,-0.6);wheel(gear,-1.0,-1.55,-2.2,0.32,-0.6);wheel(gear,0,-1.7,5.2,0.2,0.1);
+  g.add(gear);return {g,gear,prop:null,burners,rotors:[{o:mr.grp,dir:1}],discs:[mr.disc]};
+}
+const BUILDERS={cub:buildCub,spitfire:buildSpitfire,f16:buildF16,sr71:buildSR71,chinook:buildChinook,apache:buildApache,osprey:buildOsprey,f35:buildF35,stormhawk:buildStormhawk};
 
 /* ------------------------------------------------------------------ game state */
 const planeObj=new THREE.Group();scene.add(planeObj);
@@ -980,8 +1034,9 @@ const $=id=>document.getElementById(id);
       <div class="stat"><span>Speed</span>${dots(p.ratings[0])}</div>
       <div class="stat"><span>Agility</span>${dots(p.ratings[1])}</div>
       <div class="stat"><span>Easy</span>${dots(p.ratings[2])}</div>
-      <div class="num">Top ≈ ${Math.round(p.max*1.944)} kts · ${p.heli?(p.tilt?'Hover + airplane mode':'Hovers'):'Stall '+Math.round(p.stall*1.944)+' kts'}</div>`;
-    d.onclick=()=>selectPlane(i);(p.heli?$('hcards'):cards).appendChild(d);
+      <div class="num">Top ≈ ${Math.round(p.max*1.944)} kts · ${p.stovl?'Vertical take‑off + jet':p.jetThrust?'Hovers + jet boost':p.heli?(p.tilt?'Hover + airplane mode':'Hovers'):'Stall '+Math.round(p.stall*1.944)+' kts'}${p.nukeProof?' · ☢ proof':''}</div>`;
+    if(p.secret)d.classList.add('secret');
+    d.onclick=()=>selectPlane(i);(p.secret?$('scards'):p.heli?$('hcards'):cards).appendChild(d);
   });
   $('go').onclick=startFlight;$('again').onclick=openMenu;
   $('inv').onchange=e=>{invert=e.target.checked;};
@@ -1054,14 +1109,16 @@ function startFlight(){
   $('title').textContent=P.spec.name;
   axes();camOff.set(0,P.spec.camH,P.spec.camDist).applyQuaternion(P.q);camUp.set(0,1,0);
   const s=P.spec;
-  $('thrLbl').textContent=s.heli?'COL':'THR';$('tlbl').textContent=s.heli?'COLLECTIVE':'THROTTLE';
+  $('thrLbl').textContent=s.heli&&!s.jet?'COL':'THR';$('tlbl').textContent=s.heli&&!s.jet?'COLLECTIVE':'THROTTLE';
   $('touch').classList.toggle('osprey',!!s.tilt);
   if(touchMode){try{const de=document.documentElement;if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})).catch(()=>{});else if(de.webkitRequestFullscreen&&!document.webkitFullscreenElement)de.webkitRequestFullscreen();}catch(e){}}
   $('nacRow').classList.toggle('hidden',!s.tilt);$('wpnRow').classList.toggle('hidden',!s.weapons);
   $('help').innerHTML=s.heli?
-    `<b>W</b><b>S</b> collective (up/down) &nbsp; <b>↑</b><b>↓</b> tilt fwd/back<br><b>←</b><b>→</b> tilt sideways &nbsp; <b>A</b><b>D</b> turn (yaw)<br>${s.tilt?'<b>Q</b><b>E</b> tilt rotors plane/hover &nbsp; <b>G</b> gear<br>':''}${s.weapons?'<b>Space</b> / <b>F</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br>':''}<b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`:
+    `<b>W</b><b>S</b> collective (up/down) &nbsp; <b>↑</b><b>↓</b> tilt fwd/back<br><b>←</b><b>→</b> tilt sideways &nbsp; <b>A</b><b>D</b> turn (yaw)<br>${s.tilt?(s.stovl?'<b>Q</b> jet mode <b>E</b> hover mode &nbsp; <b>G</b> gear<br>':'<b>Q</b><b>E</b> tilt rotors plane/hover &nbsp; <b>G</b> gear<br>'):''}${s.jetThrust?'Push <b>↑</b> forward to fire the jets &nbsp; <b>G</b> gear<br>':''}${s.weapons?'<b>Space</b> / <b>F</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br>':''}<b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`:
     `<b>W</b><b>S</b> throttle &nbsp; <b>↑</b><b>↓</b> pitch &nbsp; <b>←</b><b>→</b> roll<br><b>A</b><b>D</b> rudder / steer &nbsp; <b>G</b> gear &nbsp; <b>B</b> brakes<br><b>Space</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br><b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`;
-  if(s.heli)msg(s.tilt?T('Hold W to raise collective and lift off, then press Q to tilt the rotors forward for airplane mode','Slide the collective up to lift off, then hold ⇢ PLANE to tilt the rotors forward'):
+  if(s.stovl)msg(T('Hover mode: hold W to lift straight up. Press Q to swivel the nozzle into jet mode (works on the runway too).','Hover mode: slide the throttle up to lift straight up. Hold ⇢ PLANE to swivel into jet mode.'),8);
+  else if(s.jetThrust)msg(T('Hold W to lift off, then push ↑ to tilt forward — the jets fire for a big speed boost','Slide the collective up to lift off, then push the stick forward to fire the jets'),7);
+  else if(s.heli)msg(s.tilt?T('Hold W to raise collective and lift off, then press Q to tilt the rotors forward for airplane mode','Slide the collective up to lift off, then hold ⇢ PLANE to tilt the rotors forward'):
     T(`Hold W to raise the collective until you lift off (~${Math.round(9.81/s.lift*100)}%). Tilt with the arrows to fly.`,`Slide the collective up to about ${Math.round(9.81/s.lift*100)}% to lift off, then tilt with the stick`),7);
   else msg(T(`Throttle up with W, then pull ${invert?'↑':'↓'} to lift off above ${Math.round(s.stall*1.944)} kts`,`Slide the throttle up, then pull the stick ${invert?'up':'down'} to lift off above ${Math.round(s.stall*1.944)} kts`),6);
 }
@@ -1105,7 +1162,7 @@ addEventListener('keydown',e=>{
     if(e.code==='Enter'||e.code==='Space'||e.code==='Escape')openMenu();
   }else if(state==='menu'){
     if(e.code==='Enter')startFlight();
-    const n=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7'].indexOf(e.code);if(n>=0)selectPlane(n);
+    const n=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9'].indexOf(e.code);if(n>=0)selectPlane(n);
   }
 });
 addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -1175,8 +1232,8 @@ function heliPhysics(dt){
   const yIn=(keys.KeyD?1:0)-(keys.KeyA?1:0);
   const sm=1-Math.exp(-dt*6);inp.p+=(pIn-inp.p)*sm;inp.r+=(rIn-inp.r)*sm;inp.y+=(yIn-inp.y)*sm;
   if(s.tilt){
-    if(keys.KeyQ)P.nac=Math.max(P.onGround?0.6:0,P.nac-0.16*dt);
-    if(keys.KeyE)P.nac=Math.min(1,P.nac+0.2*dt);
+    if(keys.KeyQ)P.nac=Math.max(P.onGround&&!s.stovl?0.6:0,P.nac-(s.convRate||0.16)*dt);
+    if(keys.KeyE)P.nac=Math.min(1,P.nac+(s.convRate||0.2)*dt);
   }
   const n=s.tilt?P.nac:1;
   P.gearAnim+=clamp((P.gear?1:0)-P.gearAnim,-dt*0.6,dt*0.6);
@@ -1206,6 +1263,12 @@ function heliPhysics(dt){
   _t.copy(fwd).multiplyScalar(1-n).addScaledVector(up,n).normalize();
   _v.copy(_t).multiplyScalar(T);_v.y-=9.81;
   _v.addScaledVector(up,9.81*lift*wing);
+  P.jetK=0;
+  if(s.jetThrust&&!P.onGround){ // compound heli: jets push forward when the nose is pushed down
+    P.jetK=Math.max(0,-inp.p)*Math.max(0.4,P.throttle);
+    _t.set(fwd.x,0,fwd.z);if(_t.lengthSq()>1e-6){_t.normalize();_v.addScaledVector(_t,s.jetThrust*P.jetK);}
+  }
+  if(s.wingLift)_v.y+=9.81*Math.min(0.5,(fs/75)**2); // its wings carry part of the weight at speed
   P.vel.addScaledVector(_v,dt);
   const vmax=s.tilt?lerp(s.max,s.hoverMax,n):s.max;
   const kq=(s.tilt?lerp(s.fwdThrust,4.7,n):4.7)/(vmax*vmax);
@@ -1230,7 +1293,7 @@ function heliContact(dt){
   if(th<0)return crash('Splashdown! You came down in the lake.');
   const hs=Math.hypot(P.vel.x,P.vel.z);
   if(!P.onGround){
-    if(s.tilt&&P.nac<0.6)return crash('Prop strike! Tilt the rotors back up (E) before landing an Osprey.');
+    if(s.tilt&&!s.stovl&&P.nac<0.6)return crash('Prop strike! Tilt the rotors back up (E) before landing an Osprey.');
     if(P.gearAnim<0.95)return crash('You touched down with the gear up!');
     if(P.vel.y<-s.landVs)return crash(`Hard landing at ${Math.round(-P.vel.y*196.85).toLocaleString()} ft/min.`);
     if(up.y<0.9)return crash('Tipped over on landing — the rotor blades hit the ground.');
@@ -1238,12 +1301,16 @@ function heliContact(dt){
     if(P.airTime>1.5){stats.landings++;msg(P.vel.y>-1.5?'Feather‑light landing! 🪶':'Touchdown! Nice landing.');}
     P.airTime=0;
   }
+  if(s.stovl&&P.onGround&&P.nac<0.5&&P.vel.dot(fwd)>s.stall&&inp.p>0.15){ // conventional runway rotation in jet mode
+    P.onGround=false;P.vel.y=Math.max(P.vel.y,5);P.pos.y=surf+s.gearH+0.5;rotLocal(AX,0.06);
+    msg(T('Airborne! Press G to raise the gear','Airborne! Tap GEAR to raise the gear'));return;
+  }
   P.onGround=true;
   P.heading=Math.atan2(-fwd.x,-fwd.z);P.gPitch=0;
   P.q.setFromEuler(_e.set(0,P.heading,0,'YXZ'));
   P.pos.y=surf+s.gearH;
   if(P.vel.y<0)P.vel.y=0;
-  const f=Math.exp(-((keys.KeyB?3:0)+1.5)*dt);
+  const f=Math.exp(-((keys.KeyB?3:0)+(s.rollF??1.5))*dt);
   const fx=-Math.sin(P.heading),fz=-Math.cos(P.heading),along=P.vel.x*fx+P.vel.z*fz;
   P.vel.x=fx*along*f;P.vel.z=fz*along*f;
 }
@@ -1350,7 +1417,10 @@ function detonate(D){
   flash=clamp(1.3-d/9000,0.45,1);shake=Math.max(shake,clamp(5-d/1500,0.5,5));
   sndNuke(Math.min(4,d/343));
 }
+const shield=new THREE.Mesh(new THREE.SphereGeometry(1,28,18),new THREE.MeshBasicMaterial({color:0x7fd8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+shield.visible=false;planeObj.add(shield);let shieldT=0;
 function updateNukes(dt){
+  if(shieldT>0&&state==='flying'){shieldT-=dt;shield.visible=true;shield.material.opacity=0.45*Math.min(1,shieldT)*(0.75+0.25*Math.random());}else{shieldT=0;shield.visible=false;}
   $('flash').style.opacity=Math.min(1,flash);flash=Math.max(0,flash-dt*0.55);
   for(let ni=nukes.length-1;ni>=0;ni--){
     const n=nukes[ni];n.t+=dt;const t=n.t,O=n.O,g=n.g;
@@ -1399,7 +1469,11 @@ function updateNukes(dt){
     }
     if(!n.hitP&&state==='flying'&&P.pos.distanceTo(O)<sr){
       n.hitP=true;const d=P.pos.distanceTo(O);
-      if(d<n.R*0.85)crash('☢ You were caught in the nuclear blast! Fire it from much further away.');
+      if(d<n.R*0.85&&P.spec.nukeProof){
+        shieldT=3.5;shield.scale.setScalar(P.spec.len*0.75);shake=Math.max(shake,8);
+        _t.copy(P.pos).sub(O).normalize();if(P.spec.heli)P.vel.addScaledVector(_t,18);
+        msg('🛡 Nuke‑proof shielding held — you survived the blast!',3);
+      }else if(d<n.R*0.85)crash('☢ You were caught in the nuclear blast! Fire it from much further away.');
       else{shake=Math.max(shake,clamp(9*(1-d/(n.R*4)),1,9));_t.copy(P.pos).sub(O).normalize();if(P.spec.heli)P.vel.addScaledVector(_t,25*clamp(1-d/(n.R*4),0.1,1));msg('Hold on — shock wave!',2);}
     }
     if(!n.msgDone&&sr>n.R){n.msgDone=true;if(state==='flying')msg(`☢ The blast destroyed ${n.kills} things`,3);}
@@ -1635,7 +1709,7 @@ function initAudio(){
 function toggleMute(){muted=!muted;if(A.master)A.master.gain.value=muted?0:0.5;msg(muted?'Sound off':'Sound on',1.2);}
 function updateAudio(time,warnTxt){
   if(!AC)return;const s=P.spec,fly=state==='flying',now=AC.currentTime,thr=P.throttle,sp=P.speed/s.max;
-  if(s.heli){A.osc.frequency.setTargetAtTime((s.id==='chinook'?11:15)+thr*6,now,0.1);A.oG.gain.setTargetAtTime(fly?0.12+thr*0.12:0,now,0.1);
+  if(s.heli&&!s.jet){A.osc.frequency.setTargetAtTime((s.id==='chinook'?11:15)+thr*6,now,0.1);A.oG.gain.setTargetAtTime(fly?0.12+thr*0.12:0,now,0.1);
     A.nF.frequency.setTargetAtTime(250+sp*600+thr*300,now,0.1);A.nG.gain.setTargetAtTime(fly?0.04+thr*0.1+sp*0.06:0,now,0.1);}
   else if(s.jet){A.osc.frequency.setTargetAtTime(35+thr*45,now,0.1);A.oG.gain.setTargetAtTime(fly?0.03+thr*0.04:0,now,0.1);
     A.nF.frequency.setTargetAtTime(400+thr*1400+sp*800,now,0.1);A.nG.gain.setTargetAtTime(fly?0.05+thr*0.22+sp*0.1:0,now,0.1);}
@@ -1747,7 +1821,10 @@ function updateWorld(dt,time){
     if(model.rotors){const rate=state==='flying'?16+P.throttle*10:(state==='menu'?2.5:0);for(const r of model.rotors)r.o.rotation.y+=rate*r.dir*dt;for(const d of model.discs)d.visible=rate>8;}
     if(model.nacelles)for(const nc of model.nacelles)nc.rotation.x=P.nac*Math.PI/2;
     model.gear.scale.set(1,Math.max(0.01,P.gearAnim),1);model.gear.visible=P.gearAnim>0.03;
-    const ab=state==='flying'&&P.spec.jet?smooth(0.75,1,P.throttle):0;
+    let ab=state==='flying'&&P.spec.jet?smooth(0.75,1,P.throttle):0;
+    if(state==='flying'&&P.spec.stovl)ab=Math.max(0.15,P.throttle);
+    if(P.spec.jetThrust)ab=state==='flying'?(P.jetK||0):0;
+    if(model.hoverFx){const k=state==='flying'?P.nac*P.throttle:0;for(const h of model.hoverFx){h.visible=k>0.05;h.scale.set(1,1,0.3+k*1.4+Math.random()*0.15);}}
     for(const b of model.burners){b.visible=ab>0.01;b.scale.set(0.7+ab*0.3,0.7+ab*0.3,0.3+ab*(0.8+Math.random()*0.25));}
   }
   for(const a of animators)a(dt);
