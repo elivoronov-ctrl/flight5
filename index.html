@@ -1380,7 +1380,7 @@ function heliPhysics(dt){
     if(n<0.25&&L<1&&fwd.y>-0.8)rotLocal(AX,-(1-L)*1.5*wing*dt);
   }
   P.q.normalize();axes();
-  const heroV=s.hero?HERO_LV[heroLv]/1.944:0,fT=s.hero?Math.max(s.fwdThrust,heroV*0.45):s.fwdThrust; // thrust scales with the speed level
+  const heroV=s.hero?HERO_LV[heroLv]/1.944:0,fT=s.hero?Math.max(s.fwdThrust,heroV*0.6):s.fwdThrust; // thrust scales with the speed level
   const T=P.throttle*(s.tilt?lerp(fT,s.lift,n):s.lift);
   _t.copy(fwd).multiplyScalar(1-n).addScaledVector(up,n).normalize();
   _v.copy(_t).multiplyScalar(T);_v.y-=9.81;
@@ -1396,6 +1396,7 @@ function heliPhysics(dt){
   const kq=(s.tilt?lerp(fT,4.7,n):4.7)/(vmax*vmax);
   const sp=P.vel.length();
   P.vel.multiplyScalar(s.hero?Math.max(1-2.5*dt,1-(kq*sp+0.04)*dt):Math.max(0,1-(kq*sp+0.04)*dt)); // the hero eases down to a lower level instead of stopping dead
+  if(s.hero){const v=P.vel.length();if(v>vmax)P.vel.multiplyScalar(Math.max(vmax,v*(1-2.5*dt))/v);} // the level is a hard limit
   P.vel.y*=Math.max(0,1-0.7*n*dt); // rotor wash damps vertical drift so hovering feels steady
   if(wing*lift>0){const vf=P.vel.dot(fwd);_t.copy(P.vel).addScaledVector(fwd,-vf);P.vel.addScaledVector(_t,-(1-Math.exp(-2.5*wing*lift*dt)));}
   P.pos.addScaledVector(P.vel,dt);
