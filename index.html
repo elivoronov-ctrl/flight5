@@ -1046,13 +1046,23 @@ function buildStormhawk(){
   wheel(gear,1.0,-1.55,-2.2,0.32,-0.6);wheel(gear,-1.0,-1.55,-2.2,0.32,-0.6);wheel(gear,0,-1.7,5.2,0.2,0.1);
   g.add(gear);return {g,gear,prop:null,burners,rotors:[{o:mr.grp,dir:1}],discs:[mr.disc]};
 }
+let heroEnv=null;
+function heroEnvMap(){ // a soft sky/horizon/ground reflection so the armour actually gleams
+  if(heroEnv)return heroEnv;
+  const t=canvasTex(512,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);
+    gr.addColorStop(0,'#5f9fe0');gr.addColorStop(0.42,'#d8ecff');gr.addColorStop(0.5,'#fffaf0');gr.addColorStop(0.53,'#b9b39a');gr.addColorStop(0.7,'#5f7a45');gr.addColorStop(1,'#3a4a2c');
+    g.fillStyle=gr;g.fillRect(0,0,w,h);g.fillStyle='rgba(255,255,240,.95)';g.beginPath();g.arc(w*0.3,h*0.22,18,0,7);g.fill();});
+  t.mapping=THREE.EquirectangularReflectionMapping;
+  const pm=new THREE.PMREMGenerator(renderer);heroEnv=pm.fromEquirectangular(t).texture;pm.dispose();t.dispose();
+  return heroEnv;
+}
 function buildAurum(){
   // an original flying hero: polished gold armour with silver helmet, gauntlets, belt and boots
-  const g=new THREE.Group(),gear=new THREE.Group();
-  const gold=M(0xffc23d,{metalness:0.85,roughness:0.22,emissive:0x5a3a00,emissiveIntensity:0.35});
-  const gold2=M(0xe0a020,{metalness:0.9,roughness:0.3,emissive:0x3a2400,emissiveIntensity:0.3});
-  const silver=M(0xe6ebf0,{metalness:0.9,roughness:0.18,emissive:0x2a3036,emissiveIntensity:0.4});
-  const visor=M(0x2a1a05,{metalness:1,roughness:0.08,emissive:0xffb020,emissiveIntensity:0.25});
+  const g=new THREE.Group(),gear=new THREE.Group(),env=heroEnvMap();
+  const gold=M(0xffc93d,{metalness:1,roughness:0.18,envMap:env,envMapIntensity:1.6,emissive:0x6a4200,emissiveIntensity:0.25});
+  const gold2=M(0xf0b028,{metalness:1,roughness:0.28,envMap:env,envMapIntensity:1.4,emissive:0x4a2c00,emissiveIntensity:0.2});
+  const silver=M(0xf2f5f8,{metalness:1,roughness:0.12,envMap:env,envMapIntensity:1.7,emissive:0x30363c,emissiveIntensity:0.2});
+  const visor=M(0x3a2405,{metalness:1,roughness:0.05,envMap:env,envMapIntensity:1.2,emissive:0xffb020,emissiveIntensity:0.3});
   const body=new THREE.Group();body.scale.setScalar(1.6);g.add(body);
   const o=0.32;  // build lying flat (head toward -Z, chest facing down); pivot sits at the hips
   const torso=add(body,cylZ(0.26,0.22,0.62,20),gold,0,0,-0.22-o);torso.scale.set(1.25,0.72,1);
