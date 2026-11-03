@@ -54,6 +54,9 @@
   .card.secret{background:linear-gradient(135deg,rgba(20,20,30,.55),rgba(80,60,10,.35));border-color:rgba(255,211,77,.45)}
   .card.secret.sel{border-color:#ffd34d;box-shadow:0 0 18px rgba(255,211,77,.45)}
   .sect.secret{color:#ffd34d}
+  .sect.hero{color:#ffe7a0}
+  .card.hero{background:linear-gradient(135deg,rgba(255,200,60,.28),rgba(220,228,236,.18));border-color:rgba(255,226,140,.6)}
+  .card.hero.sel{border-color:#ffd34d;box-shadow:0 0 22px rgba(255,211,77,.6)}
   .card h3{margin:0;font-size:18px}
   .card .real{font-size:12px;opacity:.75;margin-top:2px}
   .card p{font-size:12px;margin:5px 0;opacity:.92}
@@ -222,6 +225,7 @@
   <div class="bottom">
     <div class="sect">✈ Airplanes</div><div id="cards" class="cards"></div>
     <div class="sect">🚁 Helicopters</div><div id="hcards" class="cards"></div>
+    <div class="sect hero">🦸 Hero · indestructible</div><div id="xcards" class="cards"></div>
     <div class="sect secret">🔒 Secret hangar · nuke‑proof</div><div id="scards" class="cards"></div>
     <div class="controls">
       <label><input type="checkbox" id="inv"> Arrow ↑ = nose up (instead of flight‑stick style)</label>
@@ -293,8 +297,9 @@ const PLANES=[
   lift:18.5,fwdThrust:24,max:250,hoverMax:55,stall:38,att:1.9,maxTilt:0.3,pitch:1.8,roll:3.6,yaw:0.7,turn:1.05,convRate:0.2,rollF:0.04,gearH:1.85,belly:0.7,span:10.7,len:15.6,rotorY:0,camDist:27,camH:6.5,cock:[0.95,-3.2],landVs:6,landHs:130,color:0x5f666e,ratings:[5,5,3]},
  {id:'stormhawk',heli:true,jetThrust:13,wingLift:true,retract:true,secret:true,nukeProof:true,name:'XH‑9 Stormhawk',real:'Secret · winged jet helicopter',desc:'Two sets of wings and twin jets. Push the nose forward and the jets kick in for crazy speed.',
   lift:19.5,max:125,att:2.4,maxTilt:0.45,yaw:1.3,gearH:1.9,belly:1.0,span:12.4,len:14,rotorY:1.9,camDist:24,camH:6.5,cock:[1.4,-2.4],landVs:5,landHs:15,stall:0,color:0x22252b,ratings:[4,4,3]},
+ {id:'aurum',heli:true,tilt:true,stovl:true,hero:true,invuln:true,nukeProof:true,name:'Aurum',real:'Hero · the Gilded Titan',desc:'A shining gold‑and‑silver flying hero. Hovers like a helicopter, then press Q to streak through the sky like a jet. Indestructible — crashes just bounce off.',
+  lift:19,fwdThrust:30,max:320,hoverMax:60,stall:22,att:2.6,maxTilt:0.45,pitch:2.2,roll:3.6,yaw:1.3,turn:1.2,convRate:0.7,rollF:1.5,gearH:1.85,belly:0.45,span:2.2,len:3.6,rotorY:0,camDist:14,camH:3.6,cock:[1.1,-0.4],landVs:99,landHs:999,color:0xffc83d,ratings:[5,5,5]},
 ];
-
 for(const p of PLANES)p.weapons=true;
 
 /* ------------------------------------------------------------------ renderer / scene */
@@ -1041,7 +1046,40 @@ function buildStormhawk(){
   wheel(gear,1.0,-1.55,-2.2,0.32,-0.6);wheel(gear,-1.0,-1.55,-2.2,0.32,-0.6);wheel(gear,0,-1.7,5.2,0.2,0.1);
   g.add(gear);return {g,gear,prop:null,burners,rotors:[{o:mr.grp,dir:1}],discs:[mr.disc]};
 }
-const BUILDERS={cub:buildCub,spitfire:buildSpitfire,f16:buildF16,sr71:buildSR71,chinook:buildChinook,apache:buildApache,osprey:buildOsprey,f35:buildF35,stormhawk:buildStormhawk};
+function buildAurum(){
+  // an original flying hero: polished gold armour with silver helmet, gauntlets, belt and boots
+  const g=new THREE.Group(),gear=new THREE.Group();
+  const gold=M(0xffc23d,{metalness:0.85,roughness:0.22,emissive:0x5a3a00,emissiveIntensity:0.35});
+  const gold2=M(0xe0a020,{metalness:0.9,roughness:0.3,emissive:0x3a2400,emissiveIntensity:0.3});
+  const silver=M(0xe6ebf0,{metalness:0.9,roughness:0.18,emissive:0x2a3036,emissiveIntensity:0.4});
+  const visor=M(0x2a1a05,{metalness:1,roughness:0.08,emissive:0xffb020,emissiveIntensity:0.25});
+  const body=new THREE.Group();body.scale.setScalar(1.6);g.add(body);
+  const o=0.32;  // build lying flat (head toward -Z, chest facing down); pivot sits at the hips
+  const torso=add(body,cylZ(0.26,0.22,0.62,20),gold,0,0,-0.22-o);torso.scale.set(1.25,0.72,1);
+  add(body,cylZ(0.2,0.24,0.18,18),gold2,0,0,0.12-o).scale.set(1.2,0.72,1);
+  add(body,BOX(0.46,0.24,0.1),silver,0,0,0.24-o);                         // belt
+  const em=new THREE.Mesh(new THREE.CircleGeometry(0.11,6),silver);em.rotation.x=Math.PI/2;em.position.set(0,-0.17,-0.3-o);body.add(em); // chest emblem
+  const em2=new THREE.Mesh(new THREE.CircleGeometry(0.06,6),gold2);em2.rotation.x=Math.PI/2;em2.position.set(0,-0.175,-0.3-o);body.add(em2);
+  add(body,cylZ(0.065,0.065,0.12,12),gold2,0,0,-0.58-o);                  // neck
+  add(body,new THREE.SphereGeometry(0.135,20,14),silver,0,0.01,-0.72-o);   // helmet
+  const vz=add(body,new THREE.SphereGeometry(0.1,16,10,0,Math.PI*2,0,Math.PI/2),visor,0,-0.07,-0.75-o);vz.rotation.x=Math.PI;
+  add(body,BOX(0.03,0.08,0.2),gold,0,0.14,-0.72-o);                         // crest
+  const arms=[];
+  for(const sx of[1,-1]){
+    add(body,new THREE.SphereGeometry(0.115,14,10),silver,sx*0.31,0.02,-0.42-o);   // shoulder plates
+    const arm=new THREE.Group();arm.position.set(sx*0.3,0,-0.42-o);body.add(arm);
+    add(arm,cylZ(0.075,0.07,0.32,12),gold,0,0,-0.17);
+    add(arm,cylZ(0.07,0.06,0.3,12),silver,0,0,-0.48);                      // gauntlet
+    add(arm,new THREE.SphereGeometry(0.075,12,10),silver,0,0,-0.67);       // fist
+    arms.push(arm);
+    add(body,cylZ(0.085,0.11,0.46,14),gold,sx*0.12,0,0.56-o);              // thigh
+    add(body,new THREE.SphereGeometry(0.085,12,10),gold2,sx*0.12,0,0.8-o);  // knee
+    add(body,cylZ(0.065,0.08,0.4,14),gold,sx*0.12,0,1.0-o);                // shin
+    add(body,BOX(0.13,0.16,0.26),silver,sx*0.12,-0.02,1.28-o);             // boot
+  }
+  return {g,gear,prop:null,burners:[],nacelles:[body],heroArms:arms};
+}
+const BUILDERS={aurum:buildAurum,cub:buildCub,spitfire:buildSpitfire,f16:buildF16,sr71:buildSR71,chinook:buildChinook,apache:buildApache,osprey:buildOsprey,f35:buildF35,stormhawk:buildStormhawk};
 
 /* ------------------------------------------------------------------ game state */
 const planeObj=new THREE.Group();scene.add(planeObj);
@@ -1087,9 +1125,9 @@ const $=id=>document.getElementById(id);
       <div class="stat"><span>Speed</span>${dots(p.ratings[0])}</div>
       <div class="stat"><span>Agility</span>${dots(p.ratings[1])}</div>
       <div class="stat"><span>Easy</span>${dots(p.ratings[2])}</div>
-      <div class="num">Top ≈ ${Math.round(p.max*1.944)} kts · ${p.stovl?'Vertical take‑off + jet':p.jetThrust?'Hovers + jet boost':p.heli?(p.tilt?'Hover + airplane mode':'Hovers'):'Stall '+Math.round(p.stall*1.944)+' kts'}${p.nukeProof?' · ☢ proof':''}</div>`;
-    if(p.secret)d.classList.add('secret');
-    d.onclick=()=>selectPlane(i);(p.secret?$('scards'):p.heli?$('hcards'):cards).appendChild(d);
+      <div class="num">Top ≈ ${Math.round(p.max*1.944)} kts · ${p.hero?'Hover + jet flight · indestructible':p.stovl?'Vertical take‑off + jet':p.jetThrust?'Hovers + jet boost':p.heli?(p.tilt?'Hover + airplane mode':'Hovers'):'Stall '+Math.round(p.stall*1.944)+' kts'}${p.nukeProof&&!p.hero?' · ☢ proof':''}</div>`;
+    if(p.secret)d.classList.add('secret');if(p.hero)d.classList.add('hero');
+    d.onclick=()=>selectPlane(i);(p.hero?$('xcards'):p.secret?$('scards'):p.heli?$('hcards'):cards).appendChild(d);
   });
   $('go').onclick=startFlight;$('again').onclick=openMenu;
   $('inv').onchange=e=>{invert=e.target.checked;};
@@ -1168,16 +1206,28 @@ function startFlight(){
   if(touchMode){try{const de=document.documentElement;if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})).catch(()=>{});else if(de.webkitRequestFullscreen&&!document.webkitFullscreenElement)de.webkitRequestFullscreen();}catch(e){}}
   $('nacRow').classList.toggle('hidden',!s.tilt);$('wpnRow').classList.toggle('hidden',!s.weapons);
   $('help').innerHTML=s.heli?
-    `<b>W</b><b>S</b> collective (up/down) &nbsp; <b>↑</b><b>↓</b> tilt fwd/back<br><b>←</b><b>→</b> tilt sideways &nbsp; <b>A</b><b>D</b> turn (yaw)<br>${s.tilt?(s.stovl?'<b>Q</b> jet mode <b>E</b> hover mode &nbsp; <b>G</b> gear<br>':'<b>Q</b><b>E</b> tilt rotors plane/hover &nbsp; <b>G</b> gear<br>'):''}${s.jetThrust?'Push <b>↑</b> forward to fire the jets &nbsp; <b>G</b> gear<br>':''}${s.weapons?'<b>Space</b> / <b>F</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br>':''}<b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`:
+    `<b>W</b><b>S</b> collective (up/down) &nbsp; <b>↑</b><b>↓</b> tilt fwd/back<br><b>←</b><b>→</b> tilt sideways &nbsp; <b>A</b><b>D</b> turn (yaw)<br>${s.tilt?(s.hero?'<b>Q</b> fly mode <b>E</b> hover mode<br>':s.stovl?'<b>Q</b> jet mode <b>E</b> hover mode &nbsp; <b>G</b> gear<br>':'<b>Q</b><b>E</b> tilt rotors plane/hover &nbsp; <b>G</b> gear<br>'):''}${s.jetThrust?'Push <b>↑</b> forward to fire the jets &nbsp; <b>G</b> gear<br>':''}${s.weapons?'<b>Space</b> / <b>F</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br>':''}<b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`:
     `<b>W</b><b>S</b> throttle &nbsp; <b>↑</b><b>↓</b> pitch &nbsp; <b>←</b><b>→</b> roll<br><b>A</b><b>D</b> rudder / steer &nbsp; <b>G</b> gear &nbsp; <b>B</b> brakes<br><b>Space</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br><b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`;
-  if(s.stovl)msg(T('Hover mode: hold W to lift straight up. Press Q to swivel the nozzle into jet mode (works on the runway too).','Hover mode: slide the throttle up to lift straight up. Hold ⇢ PLANE to swivel into jet mode.'),8);
+  if(s.hero)msg(T('Hold W to rise into the air. Press Q to fly like a jet, E to stop and hover. Nothing can hurt you!','Slide the throttle up to rise. Hold ⇢ PLANE to fly like a jet, ⇡ HOVER to stop. Nothing can hurt you!'),8);
+  else if(s.stovl)msg(T('Hover mode: hold W to lift straight up. Press Q to swivel the nozzle into jet mode (works on the runway too).','Hover mode: slide the throttle up to lift straight up. Hold ⇢ PLANE to swivel into jet mode.'),8);
   else if(s.jetThrust)msg(T('Hold W to lift off, then push ↑ to tilt forward — the jets fire for a big speed boost','Slide the collective up to lift off, then push the stick forward to fire the jets'),7);
   else if(s.heli)msg(s.tilt?T('Hold W to raise collective and lift off, then press Q to tilt the rotors forward for airplane mode','Slide the collective up to lift off, then hold ⇢ PLANE to tilt the rotors forward'):
     T(`Hold W to raise the collective until you lift off (~${Math.round(9.81/s.lift*100)}%). Tilt with the arrows to fly.`,`Slide the collective up to about ${Math.round(9.81/s.lift*100)}% to lift off, then tilt with the stick`),7);
   else msg(T(`Throttle up with W, then pull ${invert?'↑':'↓'} to lift off above ${Math.round(s.stall*1.944)} kts`,`Slide the throttle up, then pull the stick ${invert?'up':'down'} to lift off above ${Math.round(s.stall*1.944)} kts`),6);
 }
+const safePos=new V3();let bumpT=-9;
+function heroBounce(){
+  const sp=P.vel.length();
+  P.pos.copy(safePos);P.vel.multiplyScalar(-0.3);P.vel.y=Math.max(P.vel.y,3+sp*0.06);P.speed=P.vel.length();
+  if(time-bumpT>0.8){
+    bumpT=time;shake=Math.max(shake,clamp(sp/25,0.6,4));
+    for(let i=0;i<10;i++)puff(P.pos,randVec(Math.random).multiplyScalar(6+sp*0.1),0.9,2,10,0.85,0.7,false);
+    if(sp>12){sndBoom(clamp(sp/120,0.15,0.5));msg('💪 Bounced right off! Nothing can hurt Aurum.',1.6);}
+  }
+}
 function crash(reason){
   if(state!=='flying')return;
+  if(P.spec.invuln)return heroBounce();
   state='crashed';crashPos.copy(P.pos);planeObj.visible=false;
   reason=NET.onCrash(reason);
   explode(P.pos,P.spec.color);sndBoom();
@@ -1287,6 +1337,7 @@ function heliPhysics(dt){
   if(invert)pIn=-pIn;
   const yIn=(keys.KeyD?1:0)-(keys.KeyA?1:0);
   const sm=1-Math.exp(-dt*6);inp.p+=(pIn-inp.p)*sm;inp.r+=(rIn-inp.r)*sm;inp.y+=(yIn-inp.y)*sm;
+  if(s.hero&&P.onGround&&!keys.KeyQ)P.nac=Math.min(1,P.nac+dt*1.5); // stand up after landing
   if(s.tilt){
     if(keys.KeyQ)P.nac=Math.max(P.onGround&&!s.stovl?0.6:0,P.nac-(s.convRate||0.16)*dt);
     if(keys.KeyE)P.nac=Math.min(1,P.nac+(s.convRate||0.2)*dt);
@@ -1346,9 +1397,9 @@ function heliContact(dt){
   const th=terrainH(P.pos.x,P.pos.z),surf=Math.max(0,th);
   const bottom=P.pos.y-(P.gearAnim>0.9?s.gearH:s.belly);
   if(bottom>surf){P.onGround=false;return;}
-  if(th<0)return crash('Splashdown! You came down in the lake.');
+  if(th<0&&!s.invuln)return crash('Splashdown! You came down in the lake.');
   const hs=Math.hypot(P.vel.x,P.vel.z);
-  if(!P.onGround){
+  if(!P.onGround&&!s.invuln){
     if(s.tilt&&!s.stovl&&P.nac<0.6)return crash('Prop strike! Tilt the rotors back up (E) before landing an Osprey.');
     if(P.gearAnim<0.95)return crash('You touched down with the gear up!');
     if(P.vel.y<-s.landVs)return crash(`Hard landing at ${Math.round(-P.vel.y*196.85).toLocaleString()} ft/min.`);
@@ -1356,7 +1407,7 @@ function heliContact(dt){
     if(hs>s.landHs)return crash('Touched down while moving too fast and rolled over.');
     if(P.airTime>1.5){stats.landings++;msg(P.vel.y>-1.5?'Feather‑light landing! 🪶':'Touchdown! Nice landing.');}
     P.airTime=0;
-  }
+  }else if(!P.onGround){if(P.airTime>1.5)msg(P.vel.y<-15?'💥 Superhero landing!':'Touchdown!',1.6);if(P.vel.y<-15){shake=Math.max(shake,2.5);for(let i=0;i<16;i++)puff(P.pos,new V3((Math.random()-.5)*30,3+Math.random()*6,(Math.random()-.5)*30),1.6,3,16,0.75,0.8,false);}P.airTime=0;}
   if(s.stovl&&P.onGround&&P.nac<0.5&&P.vel.dot(fwd)>s.stall&&inp.p>0.15){ // conventional runway rotation in jet mode
     P.onGround=false;P.vel.y=Math.max(P.vel.y,5);P.pos.y=surf+s.gearH+0.5;rotLocal(AX,0.06);
     msg(T('Airborne! Press G to raise the gear','Airborne! Tap GEAR to raise the gear'));return;
@@ -1879,6 +1930,7 @@ function animModel(model,spec,flying,menu,thr,nac,gearAnim,jetK,dt){
   if(model.prop)model.prop.rotation.z+=dt*(flying?(4+thr*50):0);
   if(model.rotors){const rate=flying?16+thr*10:(menu?2.5:0);for(const r of model.rotors)r.o.rotation.y+=rate*r.dir*dt;for(const d of model.discs)d.visible=rate>8;}
   if(model.nacelles)for(const nc of model.nacelles)nc.rotation.x=nac*Math.PI/2;
+  if(model.heroArms)for(const a of model.heroArms)a.rotation.x=-nac*Math.PI*0.94;
   model.gear.scale.set(1,Math.max(0.01,gearAnim),1);model.gear.visible=gearAnim>0.03;
   let ab=flying&&spec.jet?smooth(0.75,1,thr):0;
   if(flying&&spec.stovl)ab=Math.max(0.15,thr);
@@ -2029,7 +2081,7 @@ const NET=(()=>{
     const rows=[{id:N.id,name:N.name,k:N.kills,s:state==='flying'?'flying':state==='crashed'?'dead':'menu',ac:selIdx,me:true,hue:hueOf(N.id)},
       ...[...players.values()].filter(r=>r.name!=='pilot').map(r=>({id:r.id,name:r.name,k:r.k,s:r.status,ac:r.ac,hue:r.hue}))];
     rows.sort((a,b)=>b.k-a.k||(a.me?-1:b.me?1:0));
-    const ico=r=>r.s==='flying'&&PLANES[r.ac]?(PLANES[r.ac].heli?'🚁':'✈'):r.s==='dead'?'💥':'🅿';
+    const ico=r=>r.s==='flying'&&PLANES[r.ac]?(PLANES[r.ac].hero?'🦸':PLANES[r.ac].heli?'🚁':'✈'):r.s==='dead'?'💥':'🅿';
     $('board').innerHTML=`<div class="h"><span>PILOTS · ${rows.length}</span><span>KILLS</span></div>`+rows.slice(0,10).map(r=>
       `<div class="p${r.me?' me':''}${r.s!=='flying'?' off':''}"><i style="background:hsl(${r.hue},85%,60%)"></i><span>${ico(r)}</span><span class="n">${r.name}</span><span class="s">${r.k}</span></div>`).join('');
   }
@@ -2053,7 +2105,7 @@ const NET=(()=>{
   }
 
   /* ---- combat */
-  function canBeHurt(){return state==='flying'&&N.spawnT<=0;}
+  function canBeHurt(){return state==='flying'&&N.spawnT<=0&&!P.spec.invuln;}
   function hurt(dmg,by,how){
     if(!canBeHurt())return;
     N.hp-=dmg;N.lastHit={by,how,t:now()};hurtA=Math.min(1,hurtA+(how==='laser'?0.06:0.8));
@@ -2074,7 +2126,7 @@ const NET=(()=>{
   }
   function missileHit(m){
     if(m.owner!==N.id&&state==='flying'&&m.pos.distanceTo(P.pos)<radius(P.spec)+2){
-      if(canBeHurt())hurt(MISSILE_DMG,m.owner,'missile');else if(state==='flying')msg('🛡 Spawn shield blocked a missile!',1.5);
+      if(canBeHurt())hurt(MISSILE_DMG,m.owner,'missile');else if(state==='flying')msg(P.spec.invuln?'💪 The missile bounced off you!':'🛡 Spawn shield blocked a missile!',1.5);
       return {player:N.id};
     }
     for(const r of players.values())if(r.id!==m.owner&&live(r)&&m.pos.distanceTo(r.pos)<radius(r.spec)+2)return {player:r.id};
@@ -2171,7 +2223,7 @@ const NET=(()=>{
     // HUD
     if(state==='flying'){
       $('hpFill').style.width=clamp(N.hp,0,100)+'%';
-      $('hpTxt').textContent=`HEALTH ${Math.round(N.hp)}`+(N.spawnT>0?` · 🛡 SHIELD ${Math.ceil(N.spawnT)}s`:'');
+      $('hpTxt').textContent=P.spec.invuln?'💪 INDESTRUCTIBLE':`HEALTH ${Math.round(N.hp)}`+(N.spawnT>0?` · 🛡 SHIELD ${Math.ceil(N.spawnT)}s`:'');
     }
     boardT-=dt;if(boardT<=0){boardT=0.5;drawBoard();}
   }
@@ -2215,6 +2267,7 @@ function frame(){
   if(state==='flying'){
     const steps=clamp(Math.ceil(P.speed*dt/3),1,20);
     const before=P.pos.clone();
+    safePos.copy(P.pos);
     for(let i=0;i<steps;i++){physics(dt/steps);if(state!=='flying')break;}
     stats.time+=dt;stats.dist+=before.distanceTo(P.pos);stats.maxSpd=Math.max(stats.maxSpd,P.speed);stats.maxAlt=Math.max(stats.maxAlt,P.pos.y);
   }
