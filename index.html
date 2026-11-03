@@ -1059,9 +1059,9 @@ function heroEnvMap(){ // a soft sky/horizon/ground reflection so the armour act
 function buildAurum(){
   // an original flying hero: polished gold armour with silver helmet, gauntlets, belt and boots
   const g=new THREE.Group(),gear=new THREE.Group(),env=heroEnvMap();
-  const gold=M(0xffc93d,{metalness:1,roughness:0.18,envMap:env,envMapIntensity:1.6,emissive:0x6a4200,emissiveIntensity:0.25});
-  const gold2=M(0xf0b028,{metalness:1,roughness:0.28,envMap:env,envMapIntensity:1.4,emissive:0x4a2c00,emissiveIntensity:0.2});
-  const silver=M(0xf2f5f8,{metalness:1,roughness:0.12,envMap:env,envMapIntensity:1.7,emissive:0x30363c,emissiveIntensity:0.2});
+  const gold=M(0xe8a10f,{metalness:1,roughness:0.18,envMap:env,envMapIntensity:0.95,emissive:0x3a2000,emissiveIntensity:0.25});
+  const gold2=M(0xb87a0c,{metalness:1,roughness:0.28,envMap:env,envMapIntensity:0.85,emissive:0x2a1800,emissiveIntensity:0.2});
+  const silver=M(0xdfe4ea,{metalness:1,roughness:0.16,envMap:env,envMapIntensity:1.05,emissive:0x30363c,emissiveIntensity:0.2});
   const visor=M(0x3a2405,{metalness:1,roughness:0.05,envMap:env,envMapIntensity:1.2,emissive:0xffb020,emissiveIntensity:0.3});
   const body=new THREE.Group();body.scale.setScalar(1.6);g.add(body);
   const o=0.32;  // build lying flat (head toward -Z, chest facing down); pivot sits at the hips
