@@ -103,7 +103,7 @@
   #tlbl{position:absolute;top:-20px;left:-10px;right:-10px;text-align:center;font-size:11px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.6)}
   #tbar{position:absolute;top:calc(52px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:8px}
   .tb{display:flex;align-items:center;justify-content:center;padding:8px 13px;border-radius:18px;font-size:13px;font-weight:800;background:rgba(10,25,45,.5);border:1.5px solid rgba(255,255,255,.45);color:#fff;backdrop-filter:blur(4px);white-space:nowrap}
-  #touch .tilt{display:none}#touch.osprey .tilt{display:flex}
+  #touch .tilt,#touch .herob{display:none}#touch.osprey .tilt,#touch.hero .herob{display:flex}
   @media (max-height:520px){
     #pad{width:132px;height:132px;left:calc(18px + env(safe-area-inset-left));bottom:calc(16px + env(safe-area-inset-bottom))}#knob{width:52px;height:52px;margin:-26px 0 0 -26px}
     #bYawL,#bYawR{width:46px;height:46px;font-size:18px;bottom:calc(158px + env(safe-area-inset-bottom))}#bYawL{left:calc(18px + env(safe-area-inset-left))}#bYawR{left:calc(104px + env(safe-area-inset-left))}
@@ -185,6 +185,7 @@
     <div class="row"><span>GEAR</span><b id="gear">DOWN</b></div>
     <div class="row hidden" id="wpnRow"><span>MSL</span><b>∞</b><span style="width:auto;margin-left:8px">☢</span><b>∞</b><span style="width:auto;margin-left:8px">LZR</span><b id="lzr">—</b><span style="width:auto;margin-left:8px">KILLS</span><b id="kills">0</b></div>
     <div class="row hidden" id="nacRow"><span>NAC</span><b id="nac"></b></div>
+    <div class="row hidden" id="lvRow"><span>LEVEL</span><b id="lv"></b></div>
     <div class="row"><span>STALL</span><b id="stallspd"></b></div>
   </div>
   <div id="title"></div>
@@ -205,7 +206,7 @@
     <div class="btn" id="bNuke" data-key="KeyN">☢</div>
     <div id="tbar">
       <div class="tb" data-key="KeyG">GEAR</div><div class="tb" data-key="KeyB">BRAKE</div>
-      <div class="tb tilt" data-key="KeyQ">⇢ PLANE</div><div class="tb tilt" data-key="KeyE">⇡ HOVER</div>
+      <div class="tb tilt" data-key="KeyQ">⇢ PLANE</div><div class="tb tilt" data-key="KeyE">⇡ HOVER</div><div class="tb herob" data-key="KeyV">⚡ SPEED</div>
       <div class="tb" data-key="KeyC">CAM</div><div class="tb" data-key="KeyM">🔊</div><div class="tb" data-key="Escape">☰</div>
     </div>
   </div>
@@ -297,8 +298,8 @@ const PLANES=[
   lift:18.5,fwdThrust:24,max:250,hoverMax:55,stall:38,att:1.9,maxTilt:0.3,pitch:1.8,roll:3.6,yaw:0.7,turn:1.05,convRate:0.2,rollF:0.04,gearH:1.85,belly:0.7,span:10.7,len:15.6,rotorY:0,camDist:27,camH:6.5,cock:[0.95,-3.2],landVs:6,landHs:130,color:0x5f666e,ratings:[5,5,3]},
  {id:'stormhawk',heli:true,jetThrust:13,wingLift:true,retract:true,secret:true,nukeProof:true,name:'XH‑9 Stormhawk',real:'Secret · winged jet helicopter',desc:'Two sets of wings and twin jets. Push the nose forward and the jets kick in for crazy speed.',
   lift:19.5,max:125,att:2.4,maxTilt:0.45,yaw:1.3,gearH:1.9,belly:1.0,span:12.4,len:14,rotorY:1.9,camDist:24,camH:6.5,cock:[1.4,-2.4],landVs:5,landHs:15,stall:0,color:0x22252b,ratings:[4,4,3]},
- {id:'aurum',heli:true,tilt:true,stovl:true,hero:true,invuln:true,nukeProof:true,name:'Aurum',real:'Hero · the Gilded Titan',desc:'A shining gold‑and‑silver flying hero. Hovers like a helicopter, then press Q to streak through the sky like a jet. Indestructible — crashes just bounce off.',
-  lift:19,fwdThrust:30,max:320,hoverMax:60,stall:22,att:2.6,maxTilt:0.45,pitch:2.2,roll:3.6,yaw:1.3,turn:1.2,convRate:0.7,rollF:1.5,gearH:1.85,belly:0.45,span:2.2,len:3.6,rotorY:0,camDist:14,camH:3.6,cock:[1.1,-0.4],landVs:99,landHs:999,color:0xffc83d,ratings:[5,5,5]},
+ {id:'aurum',heli:true,tilt:true,stovl:true,hero:true,invuln:true,noStall:true,nukeProof:true,name:'Aurum',real:'Hero · the Gilded Titan',desc:'A shining gold‑and‑silver flying hero. Hovers like a helicopter, then press Q to streak through the sky like a jet. Indestructible — crashes just bounce off.',
+  lift:19,fwdThrust:30,max:1029,hoverMax:60,stall:22,att:2.6,maxTilt:0.45,pitch:2.2,roll:3.6,yaw:1.3,turn:1.2,convRate:0.7,rollF:1.5,gearH:1.85,belly:0.45,span:2.2,len:3.6,rotorY:0,camDist:14,camH:3.6,cock:[1.1,-0.4],landVs:99,landHs:999,color:0xffc83d,ratings:[5,5,5]},
 ];
 for(const p of PLANES)p.weapons=true;
 
@@ -1135,7 +1136,7 @@ const $=id=>document.getElementById(id);
       <div class="stat"><span>Speed</span>${dots(p.ratings[0])}</div>
       <div class="stat"><span>Agility</span>${dots(p.ratings[1])}</div>
       <div class="stat"><span>Easy</span>${dots(p.ratings[2])}</div>
-      <div class="num">Top ≈ ${Math.round(p.max*1.944)} kts · ${p.hero?'Hover + jet flight · indestructible':p.stovl?'Vertical take‑off + jet':p.jetThrust?'Hovers + jet boost':p.heli?(p.tilt?'Hover + airplane mode':'Hovers'):'Stall '+Math.round(p.stall*1.944)+' kts'}${p.nukeProof&&!p.hero?' · ☢ proof':''}</div>`;
+      <div class="num">Top ≈ ${Math.round(p.max*1.944)} kts · ${p.hero?'7 speed levels · never stalls · indestructible':p.stovl?'Vertical take‑off + jet':p.jetThrust?'Hovers + jet boost':p.heli?(p.tilt?'Hover + airplane mode':'Hovers'):'Stall '+Math.round(p.stall*1.944)+' kts'}${p.nukeProof&&!p.hero?' · ☢ proof':''}</div>`;
     if(p.secret)d.classList.add('secret');if(p.hero)d.classList.add('hero');
     d.onclick=()=>selectPlane(i);(p.hero?$('xcards'):p.secret?$('scards'):p.heli?$('hcards'):cards).appendChild(d);
   });
@@ -1212,19 +1213,21 @@ function startFlight(){
   axes();camOff.set(0,P.spec.camH,P.spec.camDist).applyQuaternion(P.q);camUp.set(0,1,0);
   const s=P.spec;
   $('thrLbl').textContent=s.heli&&!s.jet?'COL':'THR';$('tlbl').textContent=s.heli&&!s.jet?'COLLECTIVE':'THROTTLE';
-  $('touch').classList.toggle('osprey',!!s.tilt);
+  $('touch').classList.toggle('osprey',!!s.tilt);$('touch').classList.toggle('hero',!!s.hero);
   if(touchMode){try{const de=document.documentElement;if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})).catch(()=>{});else if(de.webkitRequestFullscreen&&!document.webkitFullscreenElement)de.webkitRequestFullscreen();}catch(e){}}
-  $('nacRow').classList.toggle('hidden',!s.tilt);$('wpnRow').classList.toggle('hidden',!s.weapons);
+  $('nacRow').classList.toggle('hidden',!s.tilt);$('lvRow').classList.toggle('hidden',!s.hero);$('wpnRow').classList.toggle('hidden',!s.weapons);
   $('help').innerHTML=s.heli?
-    `<b>W</b><b>S</b> collective (up/down) &nbsp; <b>↑</b><b>↓</b> tilt fwd/back<br><b>←</b><b>→</b> tilt sideways &nbsp; <b>A</b><b>D</b> turn (yaw)<br>${s.tilt?(s.hero?'<b>Q</b> fly mode <b>E</b> hover mode<br>':s.stovl?'<b>Q</b> jet mode <b>E</b> hover mode &nbsp; <b>G</b> gear<br>':'<b>Q</b><b>E</b> tilt rotors plane/hover &nbsp; <b>G</b> gear<br>'):''}${s.jetThrust?'Push <b>↑</b> forward to fire the jets &nbsp; <b>G</b> gear<br>':''}${s.weapons?'<b>Space</b> / <b>F</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br>':''}<b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`:
+    `<b>W</b><b>S</b> collective (up/down) &nbsp; <b>↑</b><b>↓</b> tilt fwd/back<br><b>←</b><b>→</b> tilt sideways &nbsp; <b>A</b><b>D</b> turn (yaw)<br>${s.tilt?(s.hero?'<b>Q</b> fly mode <b>E</b> hover mode<br><b>1</b>–<b>7</b> speed level &nbsp; <b>V</b> next level<br>':s.stovl?'<b>Q</b> jet mode <b>E</b> hover mode &nbsp; <b>G</b> gear<br>':'<b>Q</b><b>E</b> tilt rotors plane/hover &nbsp; <b>G</b> gear<br>'):''}${s.jetThrust?'Push <b>↑</b> forward to fire the jets &nbsp; <b>G</b> gear<br>':''}${s.weapons?'<b>Space</b> / <b>F</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br>':''}<b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`:
     `<b>W</b><b>S</b> throttle &nbsp; <b>↑</b><b>↓</b> pitch &nbsp; <b>←</b><b>→</b> roll<br><b>A</b><b>D</b> rudder / steer &nbsp; <b>G</b> gear &nbsp; <b>B</b> brakes<br><b>Space</b> missiles &nbsp; <b>N</b> nuke ☢ &nbsp; <b>L</b> laser<br><b>C</b> camera &nbsp; <b>M</b> mute &nbsp; <b>Esc</b> new aircraft`;
-  if(s.hero)msg(T('Hold W to rise into the air. Press Q to fly like a jet, E to stop and hover. Nothing can hurt you!','Slide the throttle up to rise. Hold ⇢ PLANE to fly like a jet, ⇡ HOVER to stop. Nothing can hurt you!'),8);
+  if(s.hero)msg(T('Hold W to rise. Q flies like a jet, E hovers. Keys 1–7 set your speed level (20 to 2,000 kts).','Slide the throttle up to rise. ⇢ PLANE flies, ⇡ HOVER stops, ⚡ SPEED changes your speed level.'),9);
   else if(s.stovl)msg(T('Hover mode: hold W to lift straight up. Press Q to swivel the nozzle into jet mode (works on the runway too).','Hover mode: slide the throttle up to lift straight up. Hold ⇢ PLANE to swivel into jet mode.'),8);
   else if(s.jetThrust)msg(T('Hold W to lift off, then push ↑ to tilt forward — the jets fire for a big speed boost','Slide the collective up to lift off, then push the stick forward to fire the jets'),7);
   else if(s.heli)msg(s.tilt?T('Hold W to raise collective and lift off, then press Q to tilt the rotors forward for airplane mode','Slide the collective up to lift off, then hold ⇢ PLANE to tilt the rotors forward'):
     T(`Hold W to raise the collective until you lift off (~${Math.round(9.81/s.lift*100)}%). Tilt with the arrows to fly.`,`Slide the collective up to about ${Math.round(9.81/s.lift*100)}% to lift off, then tilt with the stick`),7);
   else msg(T(`Throttle up with W, then pull ${invert?'↑':'↓'} to lift off above ${Math.round(s.stall*1.944)} kts`,`Slide the throttle up, then pull the stick ${invert?'up':'down'} to lift off above ${Math.round(s.stall*1.944)} kts`),6);
 }
+const HERO_LV=[20,50,100,200,500,1000,2000];let heroLv=3; // Aurum's selectable top speeds, in knots
+function setHeroLv(i){heroLv=(i+HERO_LV.length)%HERO_LV.length;msg(`⚡ Speed level ${heroLv+1}: up to ${HERO_LV[heroLv].toLocaleString()} kts`,1.6);}
 const safePos=new V3();let bumpT=-9;
 function heroBounce(){
   const sp=P.vel.length();
@@ -1273,6 +1276,7 @@ addEventListener('keydown',e=>{
   if(state==='flying'){
     if(e.code==='KeyG')toggleGear();
     if(e.code==='KeyC')camMode=(camMode+1)%2;
+    if(P.spec.hero){const d=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7'].indexOf(e.code);if(d>=0)setHeroLv(d);if(e.code==='KeyV')setHeroLv(heroLv+1);}
     if(e.code==='Escape')openMenu();
   }else if(state==='crashed'){
     if(e.code==='Enter'||e.code==='Space'||e.code==='Escape')openMenu();
@@ -1357,14 +1361,14 @@ function heliPhysics(dt){
   axes();
   const fs=Math.max(0,P.vel.dot(fwd));
   const wing=s.tilt?clamp((0.75-n)/0.75,0,1):0;
-  const L=s.tilt?(fs/s.stall)**2:0,lift=Math.min(1,L);
+  const L=s.noStall?1:s.tilt?(fs/s.stall)**2:0,lift=Math.min(1,L);
   if(!P.onGround){
     if(n>0.5){ // helicopter: arrows set the tilt angle, release to level out
       const pitch=Math.asin(clamp(fwd.y,-1,1)),bank=-Math.asin(clamp(right.y,-1,1));
       rotLocal(AX,(inp.p*s.maxTilt-pitch)*s.att*dt);
       rotLocal(AZ,-(inp.r*s.maxTilt*1.2-bank)*s.att*dt);
     }else{ // airplane mode
-      const eff=clamp(fs/(s.stall*1.25),0.15,1);
+      const eff=s.noStall?1:clamp(fs/(s.stall*1.25),0.15,1);
       rotLocal(AX,inp.p*s.pitch*eff*dt);rotLocal(AZ,-inp.r*s.roll*eff*dt);
     }
   }
@@ -1376,7 +1380,8 @@ function heliPhysics(dt){
     if(n<0.25&&L<1&&fwd.y>-0.8)rotLocal(AX,-(1-L)*1.5*wing*dt);
   }
   P.q.normalize();axes();
-  const T=P.throttle*(s.tilt?lerp(s.fwdThrust,s.lift,n):s.lift);
+  const heroV=s.hero?HERO_LV[heroLv]/1.944:0,fT=s.hero?Math.max(s.fwdThrust,heroV*0.45):s.fwdThrust; // thrust scales with the speed level
+  const T=P.throttle*(s.tilt?lerp(fT,s.lift,n):s.lift);
   _t.copy(fwd).multiplyScalar(1-n).addScaledVector(up,n).normalize();
   _v.copy(_t).multiplyScalar(T);_v.y-=9.81;
   _v.addScaledVector(up,9.81*lift*wing);
@@ -1387,10 +1392,10 @@ function heliPhysics(dt){
   }
   if(s.wingLift)_v.y+=9.81*Math.min(0.5,(fs/75)**2); // its wings carry part of the weight at speed
   P.vel.addScaledVector(_v,dt);
-  const vmax=s.tilt?lerp(s.max,s.hoverMax,n):s.max;
-  const kq=(s.tilt?lerp(s.fwdThrust,4.7,n):4.7)/(vmax*vmax);
+  const vmax=s.hero?lerp(heroV,Math.min(heroV,s.hoverMax),n):s.tilt?lerp(s.max,s.hoverMax,n):s.max;
+  const kq=(s.tilt?lerp(fT,4.7,n):4.7)/(vmax*vmax);
   const sp=P.vel.length();
-  P.vel.multiplyScalar(Math.max(0,1-(kq*sp+0.04)*dt));
+  P.vel.multiplyScalar(s.hero?Math.max(1-2.5*dt,1-(kq*sp+0.04)*dt):Math.max(0,1-(kq*sp+0.04)*dt)); // the hero eases down to a lower level instead of stopping dead
   P.vel.y*=Math.max(0,1-0.7*n*dt); // rotor wash damps vertical drift so hovering feels steady
   if(wing*lift>0){const vf=P.vel.dot(fwd);_t.copy(P.vel).addScaledVector(fwd,-vf);P.vel.addScaledVector(_t,-(1-Math.exp(-2.5*wing*lift*dt)));}
   P.pos.addScaledVector(P.vel,dt);
@@ -1916,14 +1921,15 @@ function updateHUD(dt){
   $('thr').style.width=(P.throttle*100)+'%';if(touchMode)$('tfill').style.height=`calc(${P.throttle*100}% - ${P.throttle*10}px)`;$('thrp').textContent=Math.round(P.throttle*100)+'%'+(s.jet&&P.throttle>0.9?' AB':'');
   const ge=$('gear');
   if(P.gearAnim>0.99){ge.textContent='DOWN';ge.style.color='#7fe08a';}else if(P.gearAnim<0.01){ge.textContent='UP';ge.style.color='#cfd8e3';}else{ge.textContent='MOVING';ge.style.color='#ffd34d';}
-  $('stallspd').textContent=s.heli?(s.tilt?Math.round(s.stall*1.944)+' kts (plane)':'— hover'):Math.round(s.stall*1.944)+' kts';
+  if(s.hero)$('lv').innerHTML=HERO_LV.map((v,i)=>i===heroLv?`<span style="color:#ffd34d">${i+1}·${v>=1000?v/1000+'k':v}</span>`:`<span style="opacity:.45">${i+1}</span>`).join(' ')+' kts';
+  $('stallspd').textContent=s.noStall?'never':s.heli?(s.tilt?Math.round(s.stall*1.944)+' kts (plane)':'— hover'):Math.round(s.stall*1.944)+' kts';
   if(s.tilt)$('nac').textContent=Math.round(P.nac*90)+'° '+(P.nac>0.9?'HOVER':P.nac<0.1?'AIRPLANE':'CONVERTING');
   $('rings').textContent=`◯ ${rings.filter(r=>r.got).length}/${rings.length} rings`;
   if(s.weapons)$('kills').textContent=stats.destroyed;
   const agl=P.pos.y-groundH(P.pos.x,P.pos.z);let w='';
   if(!P.onGround&&s.heli){
     axes();const fs=P.vel.dot(fwd);
-    if(s.tilt&&P.nac<0.5&&fs<s.stall*1.1)w='STALL';
+    if(s.tilt&&!s.noStall&&P.nac<0.5&&fs<s.stall*1.1)w='STALL';
     else if(P.vy<-8&&agl<150)w='SINK RATE';
     else if(s.retract&&!P.gear&&agl<60&&P.vy<0)w='GEAR UP!';
     else if(Math.hypot(P.pos.x,P.pos.z)>8000)w='TURN BACK';
